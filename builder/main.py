@@ -1,124 +1,177 @@
+"""
+Main PlatformIO builder for the NXP S32K platform.
+
+Responsibilities:
+
+- configure ARM GCC toolchain
+- configure common compiler/linker flags
+- load selected framework integration scripts
+- build user application
+- generate Intel HEX image
+- provide J-Link upload target
+"""
+
 import os
 import sys
 from os.path import join
+
 from SCons.Script import Default, DefaultEnvironment
+
 
 env = DefaultEnvironment()
 board = env.BoardConfig()
 platform = env.PioPlatform()
 
-env.Replace(PROGNAME="firmware")
+platform_dir = platform.get_dir()
 
-env.Replace(
-    AR="arm-none-eabi-ar",
-    AS="arm-none-eabi-as",
-    CC="arm-none-eabi-gcc",
-    CXX="arm-none-eabi-g++",
-    OBJCOPY="arm-none-eabi-objcopy",
-    SIZETOOL="arm-none-eabi-size",
+PROGNAME = "firmware"
+LINKER_SCRIPT = join(platform_dir, "linker", "S32K144_64_flash.ld")
 
-    CCFLAGS=[
-        "-mcpu=%s" % board.get("build.cpu"),
-        "-mthumb",
-        "-mfloat-abi=hard",
-        "-mfpu=fpv4-sp-d16",
-        "-fshort-enums",
-        "-fno-jump-tables",
-        "-funsigned-char",
-        "-funsigned-bitfields",
-        "-ffunction-sections",
-        "-fdata-sections",
-        "-fno-common",
-        "-O1",
-        "-g"
-    ],
 
-    CPPDEFINES=[
-        "CPU_S32K144HFT0VLLT",
-        "CPU_S32K144",
-        "START_FROM_FLASH"
-    ],
+def get_frameworks():
+    frameworks = env.get("PIOFRAMEWORK", [])
 
-    LINKFLAGS=[
-        "-mcpu=%s" % board.get("build.cpu"),
-        "-mthumb",
-        "-mfloat-abi=hard",
-        "-mfpu=fpv4-sp-d16",
-        "-Wl,--gc-sections",
-        "-specs=nano.specs",
-        "-specs=nosys.specs"
-    ]
-)
+    if isinstance(frameworks, str):
+        frameworks = [frameworks]
 
-#
-# Framework setup
-#
-# All supported frameworks use the same bare-metal base layer:
-# startup file, system file, S32K144 header and linker script.
-#
-# EduFramework then adds its own include path and static library.
-#
+    return frameworks
 
-SConscript(join(platform.get_dir(), "builder", "frameworks", "baremetal.py"), exports="env")
 
-frameworks = env.get("PIOFRAMEWORK", [])
+def configure_program_name():
+    env.Replace(PROGNAME=PROGNAME)
 
-if "eduframework" in frameworks:
-    SConscript(join(platform.get_dir(), "builder", "frameworks", "eduframework.py"), exports="env")
 
-target_elf = env.BuildProgram()
+def configure_toolchain():
+    cpu = board.get("build.cpu")
 
-target_hex = env.Command(
-    join("$BUILD_DIR", "${PROGNAME}.hex"),
-    target_elf,
-    "$OBJCOPY -O ihex $SOURCE $TARGET"
-)
+    env.Replace(
+        AR="arm-none-eabi-ar",
+        AS="arm-none-eabi-as",
+        CC="arm-none-eabi-gcc",
+        CXX="arm-none-eabi-g++",
+        OBJCOPY="arm-none-eabi-objcopy",
+        SIZETOOL="arm-none-eabi-size",
 
-jlink_dir = platform.get_package_dir("tool-jlink")
-uploader_cmd = "JLink.exe" if sys.platform.startswith("win") else "JLinkExe"
+        CCFLAGS=[
+            "-mcpu=%s" % cpu,
+            "-mthumb",
+            "-mfloat-abi=hard",
+            "-mfpu=fpv4-sp-d16",
+            "-fshort-enums",
+            "-fno-jump-tables",
+            "-funsigned-char",
+            "-funsigned-bitfields",
+            "-ffunction-sections",
+            "-fdata-sections",
+            "-fno-common",
+            "-O1",
+            "-g"
+        ],
 
-if jlink_dir and os.path.isdir(jlink_dir):
-    uploader_cmd = join(jlink_dir, uploader_cmd)
+        CPPDEFINES=[
+            "CPU_S32K144HFT0VLLT",
+            "CPU_S32K144",
+            "START_FROM_FLASH"
+        ],
 
-upload_script = join("$BUILD_DIR", "upload.jlink")
+        LINKFLAGS=[
+            "-mcpu=%s" % cpu,
+            "-mthumb",
+            "-mfloat-abi=hard",
+            "-mfpu=fpv4-sp-d16",
+            "-Wl,--gc-sections",
+            "-specs=nano.specs",
+            "-specs=nosys.specs",
+            "-T%s" % LINKER_SCRIPT
+        ]
+    )
+
+
+def load_framework_scripts():
+    frameworks = get_frameworks()
+
+    env.SConscript(
+        join(platform_dir, "builder", "frameworks", "baremetal.py"),
+        exports="env"
+    )
+
+    if "eduframework" in frameworks:
+        env.SConscript(
+            join(platform_dir, "builder", "frameworks", "eduframework.py"),
+            exports="env"
+        )
+
+
+def build_program_images():
+    target_elf = env.BuildProgram()
+
+    target_hex = env.Command(
+        join("$BUILD_DIR", "${PROGNAME}.hex"),
+        target_elf,
+        "$OBJCOPY -O ihex $SOURCE $TARGET"
+    )
+
+    return target_elf, target_hex
+
+
+def get_jlink_executable():
+    jlink_dir = platform.get_package_dir("tool-jlink")
+    executable = "JLink.exe" if sys.platform.startswith("win") else "JLinkExe"
+
+    if jlink_dir and os.path.isdir(jlink_dir):
+        executable = join(jlink_dir, executable)
+
+    return executable
 
 
 def create_jlink_script(target, source, env):
     hex_path = source[0].get_abspath().replace("\\", "/")
+    upload_script = env.subst(join("$BUILD_DIR", "upload.jlink"))
 
-    with open(env.subst(upload_script), "w") as f:
-        f.write("r\n")
-        f.write("loadfile %s\n" % hex_path)
-        f.write("r\n")
-        f.write("g\n")
-        f.write("q\n")
+    with open(upload_script, "w") as script:
+        script.write("r\n")
+        script.write("loadfile %s\n" % hex_path)
+        script.write("r\n")
+        script.write("g\n")
+        script.write("q\n")
 
 
-env.Replace(
-    UPLOADER=uploader_cmd,
-    UPLOADERFLAGS=[
-        "-device",
-        board.get("debug.jlink_device"),
-        "-if",
-        "SWD",
-        "-speed",
-        "4000",
-        "-CommanderScript",
-        upload_script
-    ],
-    UPLOADCMD="$UPLOADER $UPLOADERFLAGS"
-)
+def configure_upload_target(target_hex):
+    upload_script = join("$BUILD_DIR", "upload.jlink")
 
-upload_actions = [
-    env.VerboseAction(create_jlink_script, "Generating J-Link script..."),
-    env.VerboseAction("$UPLOADCMD", "Uploading firmware...")
-]
+    env.Replace(
+        UPLOADER=get_jlink_executable(),
+        UPLOADERFLAGS=[
+            "-device",
+            board.get("debug.jlink_device"),
+            "-if",
+            "SWD",
+            "-speed",
+            "4000",
+            "-CommanderScript",
+            upload_script
+        ],
+        UPLOADCMD="$UPLOADER $UPLOADERFLAGS"
+    )
 
-env.AddPlatformTarget(
-    "upload",
-    target_hex,
-    upload_actions,
-    "Upload firmware using J-Link"
-)
+    upload_actions = [
+        env.VerboseAction(create_jlink_script, "Generating J-Link script..."),
+        env.VerboseAction("$UPLOADCMD", "Uploading firmware...")
+    ]
+
+    env.AddPlatformTarget(
+        "upload",
+        target_hex,
+        upload_actions,
+        "Upload firmware using J-Link"
+    )
+
+
+configure_program_name()
+configure_toolchain()
+load_framework_scripts()
+
+target_elf, target_hex = build_program_images()
+configure_upload_target(target_hex)
 
 Default([target_elf, target_hex])

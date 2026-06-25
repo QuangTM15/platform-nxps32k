@@ -1,39 +1,57 @@
 """
 EduFramework integration for NXP S32K144 / MaaZEDU.
 
-This framework extends the bare-metal base layer by adding:
+EduFramework extends the bare-metal base layer by adding:
 
-- EduFramework public headers
-- EduFramework static library: libeduframework.a
+- public EduFramework headers
+- prebuilt EduFramework static library
 
-The low-level startup, system file and linker script are still provided
-by the platform-level bare-metal support.
+The package is expected to have this layout:
+
+framework-eduframework-s32k144/
+├── package.json
+└── eduframework/
+    ├── include/
+    └── lib/
+        └── libeduframework.a
 """
 
-from os.path import join
+from os.path import isdir, isfile, join
+
 from SCons.Script import Import
 
 Import("env")
 
+FRAMEWORK_PACKAGE_NAME = "framework-eduframework-s32k144"
+FRAMEWORK_DIR_NAME = "eduframework"
+FRAMEWORK_LIB_NAME = "eduframework"
+
 platform = env.PioPlatform()
 
-framework_dir = platform.get_package_dir("framework-eduframework-s32k144")
+framework_package_dir = platform.get_package_dir(FRAMEWORK_PACKAGE_NAME)
 
-if not framework_dir:
-    raise RuntimeError("framework-eduframework-s32k144 package was not found")
+if not framework_package_dir:
+    raise RuntimeError("%s package was not found" % FRAMEWORK_PACKAGE_NAME)
 
-eduframework_dir = join(framework_dir, "eduframework")
-include_dir = join(eduframework_dir, "include")
-lib_dir = join(eduframework_dir, "lib")
+framework_root_dir = join(framework_package_dir, FRAMEWORK_DIR_NAME)
+framework_include_dir = join(framework_root_dir, "include")
+framework_lib_dir = join(framework_root_dir, "lib")
+framework_lib_file = join(framework_lib_dir, "lib%s.a" % FRAMEWORK_LIB_NAME)
+
+if not isdir(framework_include_dir):
+    raise RuntimeError("EduFramework include directory was not found: %s" % framework_include_dir)
+
+if not isfile(framework_lib_file):
+    raise RuntimeError("EduFramework static library was not found: %s" % framework_lib_file)
 
 env.Append(
     CPPPATH=[
-        include_dir
+        framework_include_dir
     ],
     LIBPATH=[
-        lib_dir
+        framework_lib_dir
     ],
     LIBS=[
-        "eduframework"
+        FRAMEWORK_LIB_NAME
     ]
 )

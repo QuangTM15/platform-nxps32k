@@ -1,36 +1,35 @@
 """
 Bare-metal framework integration for NXP S32K144.
 
-This script provides the common low-level build inputs required by
-a bare-metal S32K144 application:
+This script adds the platform-owned low-level support files required by
+all S32K144 applications:
 
 - startup file
 - system file
-- device header include path
-- linker script
+- S32K144 device header include path
 
-EduFramework will reuse this same base layer and only add its own
-public headers and static library.
+The linker script is configured by the main builder to avoid duplicate
+-T linker script options.
 """
 
 from os.path import join
+
 from SCons.Script import Import
 
 Import("env")
 
 platform = env.PioPlatform()
-
 platform_dir = platform.get_dir()
-system_dir = join(platform_dir, "system")
-linker_script = join(platform_dir, "linker", "S32K144_64_flash.ld")
+
+SYSTEM_DIR = join(platform_dir, "system")
 
 env.Append(
     CPPPATH=[
-        system_dir
+        SYSTEM_DIR
     ]
 )
 
 env.BuildSources(
     join("$BUILD_DIR", "system"),
-    system_dir
+    SYSTEM_DIR
 )
