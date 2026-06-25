@@ -1,15 +1,8 @@
 """
 Bare-metal framework integration for NXP S32K144.
 
-This script adds the platform-owned low-level support files required by
-all S32K144 applications:
-
-- startup file
-- system file
-- S32K144 device header include path
-
-The linker script is configured by the main builder to avoid duplicate
--T linker script options.
+This script adds the platform-owned CMSIS/device support files required
+by all S32K144 applications.
 """
 
 from os.path import join
@@ -21,15 +14,15 @@ Import("env")
 platform = env.PioPlatform()
 platform_dir = platform.get_dir()
 
-SYSTEM_DIR = join(platform_dir, "system")
+CMSIS_DIR = join(platform_dir, "cmsis")
 
 env.Append(
     CPPPATH=[
-        SYSTEM_DIR
+        CMSIS_DIR
     ]
 )
 
 env.BuildSources(
-    join("$BUILD_DIR", "system"),
-    SYSTEM_DIR
+    join("$BUILD_DIR", "cmsis"),
+    CMSIS_DIR
 )
