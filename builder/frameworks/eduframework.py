@@ -1,12 +1,13 @@
 """
 EduFramework integration for NXP S32K144 / MaaZEDU.
 
-EduFramework extends the bare-metal base layer by adding:
+This script provides the full build base for EduFramework projects:
 
-- public EduFramework headers
+- local CMSIS/device startup support from the platform
+- EduFramework public headers
 - prebuilt EduFramework static library
 
-The package is expected to have this layout:
+The EduFramework package is expected to have this layout:
 
 framework-eduframework-s32k144/
 ├── package.json
@@ -27,6 +28,23 @@ FRAMEWORK_DIR_NAME = "eduframework"
 FRAMEWORK_LIB_NAME = "eduframework"
 
 platform = env.PioPlatform()
+platform_dir = platform.get_dir()
+
+cmsis_dir = join(platform_dir, "cmsis")
+
+if not isdir(cmsis_dir):
+    raise RuntimeError("CMSIS directory was not found: %s" % cmsis_dir)
+
+env.Append(
+    CPPPATH=[
+        cmsis_dir
+    ]
+)
+
+env.BuildSources(
+    join("$BUILD_DIR", "cmsis"),
+    cmsis_dir
+)
 
 framework_package_dir = platform.get_package_dir(FRAMEWORK_PACKAGE_NAME)
 

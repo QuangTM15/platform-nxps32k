@@ -1,19 +1,16 @@
 /*
- * Copyright 2013 - 2014, Freescale Semiconductor, Inc.
- * Copyright 2016-2021 NXP
+ * Copyright (c) 2013 - 2014, Freescale Semiconductor, Inc.
+ * Copyright 2016-2020 NXP
  * All rights reserved.
  *
- * THIS SOFTWARE IS PROVIDED BY NXP "AS IS" AND ANY EXPRESSED OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
- * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- * IN NO EVENT SHALL NXP OR ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
- * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
- * THE POSSIBILITY OF SUCH DAMAGE.
+ * NXP Confidential. This software is owned or controlled by NXP and may only be
+ * used strictly in accordance with the applicable license terms. By expressly
+ * accepting such terms or by downloading, installing, activating and/or otherwise
+ * using the software, you are agreeing that you have read, and that you agree to
+ * comply with and are bound by, such license terms. If you do not agree to be
+ * bound by the applicable license terms, then you may not retain, install,
+ * activate or otherwise use the software. The production use license in
+ * Section 2.3 is expressly granted for this software.
  */
 
 #ifndef STARTUP_H
@@ -40,12 +37,10 @@
  ******************************************************************************/
 
 /*!
- * @brief define symbols that specific start and end addres of some basic sections.
+ * @brief define symbols that specific start and end addres of some basic sections. 
  */
-#if (defined(S32K14x_SERIES) || defined(S32K11x_SERIES) || defined(S32V234_SERIES) || \
-     defined(MPC574x_SERIES) || defined(S32R_SERIES) || defined(S32MTV_SERIES) || \
-     defined(SJA1110_SERIES)) || defined (S32K144W_M4_SERIES) || defined (S32K142W_M4_SERIES)
-    #if (defined(__ICCARM__))
+#if (defined(S32K14x_SERIES) || defined(S32K11x_SERIES) || defined(S32V234_SERIES) || defined(MPC574x_SERIES) || defined(S32R_SERIES) || defined(S32MTV_SERIES) || defined(SJA1110_SERIES))
+    #if (defined(__ICCARM__))     
         #define INTERRUPTS_SECTION_START               __section_begin(".intvec")
         #define INTERRUPTS_SECTION_END                 __section_end(".intvec")
         #define BSS_SECTION_START                      __section_begin(".bss")
@@ -72,7 +67,7 @@
         #define CUSTOMSECTION_SECTION_END              (uint8_t *)__CUSTOM_SECTION_END
         #define CODE_RAM_SECTION_START                 (uint8_t *)__CODE_RAM_START
         #define CODE_RAM_SECTION_END                   (uint8_t *)__CODE_RAM_END
-
+        
         extern uint32_t __VECTOR_ROM_START;
         extern uint32_t __VECTOR_ROM_END;
         extern uint32_t __BSS_START;
@@ -94,7 +89,7 @@
         #define CUSTOMSECTION_SECTION_END              (uint8_t *)&__customSection_end__
         #define CODE_RAM_SECTION_START                 (uint8_t *)&__code_ram_start__
         #define CODE_RAM_SECTION_END                   (uint8_t *)&__code_ram_end__
-
+        
         extern uint32_t __interrupts_start__;
         extern uint32_t __interrupts_end__;
         extern uint32_t __bss_start__;
@@ -124,7 +119,7 @@
  *
  * - Copy initialized data from ROM to RAM.
  * - Clear the zero-initialized data section.
- * - Copy the vector table from ROM to RAM. This could be an option.
+ * - Copy the vector table from ROM to RAM. This could be an option.  
  */
 void init_data_bss(void);
 

@@ -5,10 +5,12 @@ Responsibilities:
 
 - configure ARM GCC toolchain
 - configure common compiler/linker flags
-- load selected framework integration scripts
 - build user application
 - generate Intel HEX image
 - provide J-Link upload target
+
+Framework scripts are loaded automatically by PlatformIO according to
+the selected framework in platform.json.
 """
 
 import os
@@ -26,15 +28,6 @@ platform_dir = platform.get_dir()
 
 PROGNAME = "firmware"
 LINKER_SCRIPT = join(platform_dir, "linker", "S32K144_64_flash.ld")
-
-
-def get_frameworks():
-    frameworks = env.get("PIOFRAMEWORK", [])
-
-    if isinstance(frameworks, str):
-        frameworks = [frameworks]
-
-    return frameworks
 
 
 def configure_program_name():
@@ -85,21 +78,6 @@ def configure_toolchain():
             "-T%s" % LINKER_SCRIPT
         ]
     )
-
-
-def load_framework_scripts():
-    frameworks = get_frameworks()
-
-    env.SConscript(
-        join(platform_dir, "builder", "frameworks", "baremetal.py"),
-        exports="env"
-    )
-
-    if "eduframework" in frameworks:
-        env.SConscript(
-            join(platform_dir, "builder", "frameworks", "eduframework.py"),
-            exports="env"
-        )
 
 
 def build_program_images():
@@ -169,7 +147,6 @@ def configure_upload_target(target_hex):
 
 configure_program_name()
 configure_toolchain()
-load_framework_scripts()
 
 target_elf, target_hex = build_program_images()
 configure_upload_target(target_hex)
