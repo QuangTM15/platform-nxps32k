@@ -1,0 +1,40 @@
+# Auto detect text files
+* text=auto
+
+# Source code
+*.c          text eol=lf
+*.h          text eol=lf
+*.cpp        text eol=lf
+*.hpp        text eol=lf
+*.S          text eol=lf
+*.ld         text eol=lf
+
+# Python
+*.py         text eol=lf
+
+# JSON
+*.json       text eol=lf
+
+# PlatformIO
+*.ini        text eol=lf
+
+# Markdown
+*.md         text eol=lf
+
+# Shell
+*.sh         text eol=lf
+
+# Windows scripts
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+
+# Binary files
+*.a          binary
+*.zip        binary
+*.png        binary
+*.jpg        binary
+*.jpeg       binary
+*.pdf        binary
+*.elf        binary
+*.hex        binary
+*.bin        binary
