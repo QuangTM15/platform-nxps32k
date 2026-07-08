@@ -36,10 +36,10 @@
       "optional": true,
       "version": "https://github.com/tranhungtdh06/framework_s32k144_baremetal.git"
     },
-  "framework-eduframework-s32k144": {
-    "type": "framework",
-    "optional": true,
-    "version": "https://github.com/QuangTM15/s32k144-edu-framework/releases/download/v0.2.1/framework-eduframework-s32k144-v0.2.1.zip"
-  }
+    "framework-eduframework-s32k144": {
+      "type": "framework",
+      "optional": true,
+      "version": "https://github.com/QuangTM15/s32k144-edu-framework/releases/download/v0.2.1/framework-eduframework-s32k144-v0.2.1.zip"
+    }
   }
 }

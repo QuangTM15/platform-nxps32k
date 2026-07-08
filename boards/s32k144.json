@@ -7,7 +7,28 @@
   },
 
   "debug": {
-    "jlink_device": "S32K144"
+    "default_tools": [
+      "jlink"
+    ],
+    "jlink_device": "S32K144",
+    "svd_path": "cmsis/S32K144.svd",
+    "tools": {
+      "jlink": {
+        "server": {
+          "package": "tool-jlink",
+          "executable": "JLinkGDBServerCL.exe",
+          "arguments": [
+            "-singlerun",
+            "-if", "SWD",
+            "-select", "USB",
+            "-device", "S32K144",
+            "-speed", "4000",
+            "-port", "2331"
+          ]
+        },
+        "init_break": "tbreak main"
+      }
+    }
   },
 
   "frameworks": [
@@ -20,7 +41,10 @@
   "upload": {
     "maximum_ram_size": 65536,
     "maximum_size": 524288,
-    "protocol": "jlink"
+    "protocol": "jlink",
+    "protocols": [
+      "jlink"
+    ]
   },
 
   "url": "https://github.com/QuangTM15/platform-nxps32k",

@@ -30,6 +30,16 @@ PROGNAME = "firmware"
 LINKER_SCRIPT = join(platform_dir, "linker", "S32K144_64_flash.ld")
 
 
+def get_jlink_executable():
+    jlink_dir = platform.get_package_dir("tool-jlink")
+    executable = "JLink.exe" if sys.platform.startswith("win") else "JLinkExe"
+
+    if jlink_dir and os.path.isdir(jlink_dir):
+        executable = join(jlink_dir, executable)
+
+    return executable
+
+
 def configure_program_name():
     env.Replace(PROGNAME=PROGNAME)
 
@@ -90,16 +100,6 @@ def build_program_images():
     )
 
     return target_elf, target_hex
-
-
-def get_jlink_executable():
-    jlink_dir = platform.get_package_dir("tool-jlink")
-    executable = "JLink.exe" if sys.platform.startswith("win") else "JLinkExe"
-
-    if jlink_dir and os.path.isdir(jlink_dir):
-        executable = join(jlink_dir, executable)
-
-    return executable
 
 
 def create_jlink_script(target, source, env):
